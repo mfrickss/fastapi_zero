@@ -179,3 +179,4 @@ pyrightconfig.json
 
 /lirio
 database.db
+pytest_output.txt

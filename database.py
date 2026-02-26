@@ -1,4 +1,4 @@
-from sqlalchemy import Engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from fastapi_zero.settings import Settings
