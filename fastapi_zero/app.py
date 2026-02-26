@@ -17,10 +17,7 @@ from fastapi_zero.schemas import (
 
 app = FastAPI()
 
-database = []
-
-
-# GET
+# Generic
 @app.get('/', status_code=HTTPStatus.OK, response_model=Message)
 def read_root():
     return {'message': 'Olá Mundo!'}
@@ -33,6 +30,7 @@ def endpoint_html():
     """
 
 
+# GET
 @app.get('/users/{user_id}', response_model=UserPublic)
 def read_user(user_id: int, session: Session = Depends(get_session)):
     # user = session.scalars(select(User).where(user.id == user_id))
@@ -123,7 +121,8 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
 
     if not db_user:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='User not found'
         )
 
     session.delete(db_user)
