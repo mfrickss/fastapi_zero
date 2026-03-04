@@ -48,7 +48,7 @@ def get_current_user(
     )
 
     try:
-        payload = decode(token, SECRET_KEY, algotithms=[ALGORITHM])
+        payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         subject_email = payload.get('sub')
 
         if not subject_email:

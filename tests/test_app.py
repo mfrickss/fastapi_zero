@@ -103,7 +103,7 @@ def test_create_user_return_username_exists(client, user):
     assert response.json() == {'detail': 'Username already exists'}
 
 
-def test_create_user_return_email_exists(client, user):
+def test_create_user_return_email_already_exists(client, user):
 
     response = client.post(
         '/users/',
@@ -124,6 +124,23 @@ def test_get_token(client, user):
     assert response.status_code == HTTPStatus.OK
     assert 'access_token' in token
     assert 'token_type' in token
+
+
+def test_get_token_user_not_found(client):
+    response = client.post(
+        '/token',
+        data={'username': 'naoexiste@test.com', 'password': 'password'},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {'detail': 'Incorrect email or password'}
+
+
+def test_get_token_wrong_password(client, user):
+    response = client.post(
+        '/token', data={'username': user.email, 'password': 'wrongpassword'}
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {'detail': 'Incorrect email or password'}
 
 
 # PUT /users/{user_id}
@@ -185,7 +202,7 @@ def test_update_user_not_owner(client, token):
         },
     )
 
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {'detail': 'Not enough permissions'}
 
 
@@ -201,8 +218,14 @@ def test_delete_user(client, user, token):
     assert response.json() == {'message': 'User deleted'}
 
 
-def test_delete_user_404(client):
-    response = client.delete('/users/666')
+def test_get_current_user_not_exists(client):
+    data = {'no-email': 'test'}
+    token = create_access_token(data)
 
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
+    response = client.delete(
+        '/users/1',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {'detail': 'Could not validate credentials'}

@@ -153,18 +153,18 @@ def update_user(
 
 
 # DELETE
-@app.delete('/users/{user_id}', response_model=Message)
-def delete_user(
-    user_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
-):
-    if current_user.id != User.id:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Not enough permissions'
-        )
+# @app.delete('/users/{user_id}', response_model=Message)
+# def delete_user(
+#     user_id: int,
+#     session: Session = Depends(get_session),
+#     current_user: User = Depends(get_current_user),
+# ):
+#     if current_user.id != user_id:
+#         raise HTTPException(
+#             status_code=HTTPStatus.FORBIDDEN, detail='Not enough permissions'
+#         )
 
-    session.delete(current_user)
-    session.commit()
+#     session.delete(current_user)
+#     session.commit()
 
-    return {'message': 'User deleted'}
+#     return {'message': 'User deleted'}
