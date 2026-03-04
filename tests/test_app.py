@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from fastapi_zero.schemas import UserPublic
+from fastapi_zero.security import create_access_token
 
 
 # Generic

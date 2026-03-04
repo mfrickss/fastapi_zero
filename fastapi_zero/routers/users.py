@@ -1,21 +1,28 @@
-from typing import Annotated
 from http import HTTPStatus
-
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from typing import Annotated
 
 from fast_zero.database import get_session
 from fast_zero.models import User
-from fast_zero.schemas import Message, UserList, UserPublic, UserSchema
+from fast_zero.schemas import (
+    FilterPage,
+    Message,
+    UserList,
+    UserPublic,
+    UserSchema,
+)
 from fast_zero.security import (
     get_current_user,
     get_password_hash,
 )
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix='/users', tags=['users'])
 Session = Annotated[Session, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
 def create_user(user: UserSchema, session: Session):
@@ -51,18 +58,13 @@ def create_user(user: UserSchema, session: Session):
     return db_user
 
 
-
 @router.get('/', response_model=UserList)
-def read_users(
-    session: Session,
-    filter_users: Annotated[FilterPage, Query()]
-):
+def read_users(session: Session, filter_users: Annotated[FilterPage, Query()]):
     users = session.scalars(
-        select(User).offset(filter_users.offsert).limit(filter_users.limit)).all()
+        select(User).offset(filter_users.offset).limit(filter_users.limit)
+    ).all()
 
     return {'users': users}
-
-
 
 
 @router.put('/{user_id}', response_model=UserPublic)
