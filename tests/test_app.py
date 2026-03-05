@@ -117,7 +117,7 @@ def test_create_user_return_email_already_exists(client, user):
 
 def test_get_token(client, user):
     response = client.post(
-        '/token',
+        '/auth/token',
         data={'username': user.email, 'password': user.clean_password},
     )
     token = response.json()
@@ -129,7 +129,7 @@ def test_get_token(client, user):
 
 def test_get_token_user_not_found(client):
     response = client.post(
-        '/token',
+        '/auth/token',
         data={'username': 'naoexiste@test.com', 'password': 'password'},
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
@@ -138,7 +138,8 @@ def test_get_token_user_not_found(client):
 
 def test_get_token_wrong_password(client, user):
     response = client.post(
-        '/token', data={'username': user.email, 'password': 'wrongpassword'}
+        '/auth/token',
+        data={'username': user.email, 'password': 'wrongpassword'},
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {'detail': 'Incorrect email or password'}

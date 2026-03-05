@@ -1,23 +1,24 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fast_zero.database import get_session
-from fast_zero.models import User
-from fast_zero.schemas import (
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from database import get_session
+from fastapi_zero.models import User
+from fastapi_zero.schemas import (
     FilterPage,
     Message,
     UserList,
     UserPublic,
     UserSchema,
 )
-from fast_zero.security import (
+from fastapi_zero.security import (
     get_current_user,
     get_password_hash,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix='/users', tags=['users'])
 Session = Annotated[Session, Depends(get_session)]
@@ -67,12 +68,24 @@ def read_users(session: Session, filter_users: Annotated[FilterPage, Query()]):
     return {'users': users}
 
 
+@router.get('/{user_id}', response_model=UserPublic)
+def read_user(user_id: int, session: Session):
+    db_user = session.scalar(select(User).where(User.id == user_id))
+
+    if not db_user:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
+
+    return db_user
+
+
 @router.put('/{user_id}', response_model=UserPublic)
 def update_user(
     user_id: int,
     user: UserSchema,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
+    session: Session,
+    current_user: CurrentUser,
 ):
     if current_user.id != user_id:
         raise HTTPException(
@@ -99,8 +112,8 @@ def update_user(
 @router.delete('/{user_id}', response_model=Message)
 def delete_user(
     user_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
+    session: Session,
+    current_user: CurrentUser,
 ):
     if current_user.id != user_id:
         raise HTTPException(
