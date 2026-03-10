@@ -25,6 +25,31 @@ Session = Annotated[Session, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+@router.get('/', response_model=UserList)
+def read_users(session: Session, filter_users: Annotated[FilterPage, Query()]):
+    users = session.scalars(
+        select(User).offset(filter_users.offset).limit(filter_users.limit)
+    ).all()
+
+    return {'users': users}
+
+
+@router.get('/{user_id}', response_model=UserPublic)
+def read_user(
+    user: UserSchema,
+    session: Session, 
+    current_user: CurrentUser
+):
+    current_user = session.scalar(select(User).where(User.id == user.id))
+
+    if not current_user:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
+
+        return current_user
+
+
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
 def create_user(user: UserSchema, session: Session):
     db_user = session.scalar(
@@ -55,27 +80,6 @@ def create_user(user: UserSchema, session: Session):
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
-
-    return db_user
-
-
-@router.get('/', response_model=UserList)
-def read_users(session: Session, filter_users: Annotated[FilterPage, Query()]):
-    users = session.scalars(
-        select(User).offset(filter_users.offset).limit(filter_users.limit)
-    ).all()
-
-    return {'users': users}
-
-
-@router.get('/{user_id}', response_model=UserPublic)
-def read_user(user_id: int, session: Session):
-    db_user = session.scalar(select(User).where(User.id == user_id))
-
-    if not db_user:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
-        )
 
     return db_user
 
